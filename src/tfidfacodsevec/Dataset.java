@@ -28,7 +28,12 @@ public class Dataset {
     private final ArrayList<String> sintomasHC = new ArrayList<>();
     private final ArrayList<String> conjSintomas = new ArrayList<>();   // Atributo para el conjunto de síntomas sin repetir
     
-    private int [][] matrizConocimiento;
+    private int [][] matrizTF;                      // Matriz TF (Frecuencia de término) que a su vez es la matriz de la cantidad de HC's de 
+                                                    // una enfermedad que contiene el síntoma, pues el síntoma se escribe una sóla vez por cada HC.
+    private double [][] matrizIDF;                  // Matriz IDF (Frencuencia inversa de documento)
+    private int [] cantidadHCEnfermedad;            // Arreglo de cantidad de HC's que contengan la enfermedad
+    private double [][] matrizTFIDF;                // Matriz TF*IDF
+    
     private double [][] matrizNormalizada;
     private int [] cadenaPrueba;
     
@@ -179,10 +184,31 @@ public class Dataset {
         System.out.print("\n");
     }
     
-    // Entrena al sistema mediante el algoritmo de clustering Modelo basado en número de palabras
+    // Entrena al sistema mediante el algoritmo de clustering TF-IDF
     public void entrenamiento(){
-        matrizConocimiento = new int [conjEnfermedades.size()][conjSintomas.size()];
+        matrizTF = new int [conjEnfermedades.size()][conjSintomas.size()];
+        matrizIDF = new double [conjEnfermedades.size()][conjSintomas.size()];
+        matrizTFIDF = new double [conjEnfermedades.size()][conjSintomas.size()];
+        cantidadHCEnfermedad = new int [conjEnfermedades.size()];
+
+        // Genera el arreglo de la cantidad de HC's de una enfermedad
+        for(int i = 0; i < conjEnfermedades.size(); i++){
+            String enfermedad = conjEnfermedades.get(i);                
+            for(long key: trainingHC.keySet()){
+                if(enfermedad.equals(trainingHC.get(key).getEnfermedad())){
+                    cantidadHCEnfermedad[i]++;
+                }
+            }                            
+        }
+
+        // Imprime el arreglo de la cantidad de HC's por enfermedad
+        for(int i = 0; i < cantidadHCEnfermedad.length; i++){
+            System.out.print(cantidadHCEnfermedad[i] + " ");
+        }
+        System.out.println();
+        System.out.println();
         
+        // Genera la matriz TF
         for(int i = 0; i < conjEnfermedades.size(); i++){
             String enfermedad = conjEnfermedades.get(i);
             
@@ -191,12 +217,10 @@ public class Dataset {
                 
                 for(long key: trainingHC.keySet()){
                     if(enfermedad.equals(trainingHC.get(key).getEnfermedad())){
-                        int indexEnfermedad = i;
                         String [] symptomSet = trainingHC.get(key).getSintomas();
                         for(String symptom : symptomSet){
                             if(sintoma.equals(symptom)){
-                                int indexSintoma = j;
-                                matrizConocimiento[indexEnfermedad][indexSintoma]++;
+                                matrizTF[i][j]++;
                             }
                         }
                     }
@@ -206,20 +230,73 @@ public class Dataset {
             
         }
         
-        // Imprime la matriz de conocimiento entrenada para aplicar las técnicas de IA
-        for(int i = 0; i < matrizConocimiento.length; i++){
-            for(int j = 0; j < matrizConocimiento[i].length; j++){
-                System.out.print(matrizConocimiento[i][j] + " ");
+        // Genera la matriz IDF
+        for(int i = 0; i < conjEnfermedades.size(); i++){
+            String enfermedad = conjEnfermedades.get(i);
+            
+            for(int j = 0; j < conjSintomas.size(); j++){
+                String sintoma = conjSintomas.get(j);
+                
+                for(long key: trainingHC.keySet()){
+                    if(enfermedad.equals(trainingHC.get(key).getEnfermedad())){
+                        String [] symptomSet = trainingHC.get(key).getSintomas();
+                        for(String symptom : symptomSet){
+                            if(sintoma.equals(symptom)){
+                                matrizIDF[i][j] = Math.log10(cantidadHCEnfermedad[i] / (double)(1 + matrizTF[i][j]));
+                            }
+                        }
+                    }
+                }
+                
+            }
+            
+        }
+        
+        // Genera la matriz TF-IDF
+        for(int i = 0; i < conjEnfermedades.size(); i++){            
+            for(int j = 0; j < conjSintomas.size(); j++){                
+                matrizTFIDF[i][j] = matrizTF[i][j] * matrizIDF[i][j];                
+            }            
+        }
+        
+        // Imprime la matriz TF
+        System.out.println("Matriz TF (Term Frequency)):");
+        for(int i = 0; i < matrizTF.length; i++){
+            for(int j = 0; j < matrizTF[i].length; j++){
+                System.out.print(matrizTF[i][j] + " ");
             }
             System.out.println();
         }
         System.out.println();
+
+        // Imprime la matriz IDF
+        DecimalFormat formateador = new DecimalFormat("0.0000");
+        System.out.println("Matriz IDF (Inverse Document Frequency)):");        
+        for(int i = 0; i < matrizIDF.length; i++){
+            for(int j = 0; j < matrizIDF[i].length; j++){
+                System.out.print(formateador.format(matrizIDF[i][j]) + " ");
+                // System.out.print(matrizIDF[i][j] + " ");
+            }
+            System.out.println();
+        }
+        System.out.println();
+
+        // Imprime la matriz TFIDF
+        System.out.println("Matriz TF-IDF (TF * IDF)):");        
+        for(int i = 0; i < matrizTFIDF.length; i++){
+            for(int j = 0; j < matrizTFIDF[i].length; j++){
+                System.out.print(formateador.format(matrizTFIDF[i][j]) + " ");
+                // System.out.print(matrizIDF[i][j] + " ");
+            }
+            System.out.println();
+        }
+        System.out.println();        
         
         // Normaliza la tabla
-        this.normalizacion(matrizConocimiento);
+        this.normalizacion(matrizTFIDF);
         
         // Imprime la matriz de conocimiento normalizada entrenada para aplicar las técnicas de IA
-        DecimalFormat formateador = new DecimalFormat("0.0000");
+        System.out.println("Matriz Normalizada:");        
         for(int i = 0; i < matrizNormalizada.length; i++){
             for(int j = 0; j < matrizNormalizada[i].length; j++){
                 System.out.print(formateador.format(matrizNormalizada[i][j]) + " ");
@@ -299,7 +376,7 @@ public class Dataset {
 //----------------------- Funciones auxiliares para las operaciones del Dataset --------------------------------
     
     // Función auxiliar para normalizar la tabla (Valor elemento sobre la norma vectorial)
-    public double [][] normalizacion(int [][] tabla){
+    public double [][] normalizacion(double [][] tabla){
         matrizNormalizada = new double[conjEnfermedades.size()][conjSintomas.size()];
         for(int i = 0; i < tabla.length; i++){
             for(int j = 0; j < tabla[i].length; j++){
@@ -311,7 +388,7 @@ public class Dataset {
     }
     
     // Función auxiliar para calcular la norma vectorial
-    public double normaVectorial(int [] arreglo){
+    public double normaVectorial(double [] arreglo){
         double norma = 0.0;
         
         for(int i = 0; i < arreglo.length; i++){
