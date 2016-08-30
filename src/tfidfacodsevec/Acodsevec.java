@@ -20,11 +20,11 @@ public class Acodsevec {
         ds.imprimirDiagnosticos();
         ds.imprimirEnfermedades();
         ds.imprimirSintomas();
-        ds.seleccionAleatoria();
-        ds.imprimirDiagnosticosSeleccionados();
+        // ds.seleccionAleatoria();
+        // ds.imprimirDiagnosticosSeleccionados();
         ds.entrenamiento();
-        ds.crearConjuntoPrueba();
-        ds.imprimirDiagnosticosPrueba();
+        // ds.crearConjuntoPrueba();
+        // ds.imprimirDiagnosticosPrueba();
         ds.pruebas();
         ds.estadisticas();
     }
