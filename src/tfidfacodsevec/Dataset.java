@@ -251,20 +251,8 @@ public class Dataset {
             String [] symptomSet = testingHC.get(key).getSintomas(); 
             
             // Crea la cadena de prueba
-            for(String symptom : symptomSet){
-                for(int i = 0; i < conjSintomas.size(); i++){
-                    String sintoma = conjSintomas.get(i);
-                    if(sintoma.equals(symptom)){
-                        cadenaPrueba[i] = 1;
-                    }
-                }
-            }
-            
-            for(int i = 0; i < cadenaPrueba.length; i++){
-                System.out.print(cadenaPrueba[i] + " ");
-            }
-            System.out.println();
-            
+            this.crearCadenaPrueba(cadenaPrueba, symptomSet);
+                        
             // Medida de similaridad de HC de prueba con cada enfermedad (cluster)
             for(int i = 0; i < cadenaSimilaridad.length; i++){
                 cadenaSimilaridad[i] = this.similaridad(matrizNormalizada[i], cadenaPrueba);
@@ -412,6 +400,23 @@ public class Dataset {
         }
         System.out.print("\n");
     }    
+
+    // Crea la cadena de prueba (Rrepresentación de HC de prueba)
+    public void crearCadenaPrueba(int [] testString, String [] symptomSet){
+        for(String symptom : symptomSet){
+            for(int i = 0; i < conjSintomas.size(); i++){
+                String sintoma = conjSintomas.get(i);
+                if(sintoma.equals(symptom)){
+                    cadenaPrueba[i] = 1;
+                }
+            }
+        }
+
+        for(int i = 0; i < cadenaPrueba.length; i++){
+            System.out.print(cadenaPrueba[i] + " ");
+        }
+        System.out.println();        
+    }
     
     // Función auxiliar para calcular la medida de similaridad
     public double similaridad(double [] normCadena, int [] testCadena){
