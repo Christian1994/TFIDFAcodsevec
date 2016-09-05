@@ -31,13 +31,16 @@ public class Dataset {
     private int [][] matrizTF;                      // Matriz TF (Frecuencia de término) que a su vez es la matriz de la cantidad de HC's de 
                                                     // una enfermedad que contiene el síntoma, pues el síntoma se escribe una sóla vez por cada HC.
     private double [][] matrizIDF;                  // Matriz IDF (Frencuencia inversa de documento)
-    private int [] cantidadHCEnfermedad;            // Arreglo de cantidad de HC's que contengan la enfermedad
+    private int [] cantidadHCSintoma;               // Arreglo de cantidad de HC's que contengan el síntoma
     private double [][] matrizTFIDF;                // Matriz TF*IDF
     
     private double [][] matrizNormalizada;
     private int [] cadenaPrueba;
     
     private double [] cadenaSimilaridad;
+
+    private int cantidadAciertos = 0;
+    private int cantidadDesaciertos = 0;
     
     public Dataset(){                         
 
@@ -129,7 +132,7 @@ public class Dataset {
         Diagnostico d81 = new Diagnostico(81, "Otitis", new String[]{"Cabeceo", "Irritación en las orejas", "Dolor"}, false);
         Diagnostico d82 = new Diagnostico(82, "Otitis", new String[]{"Eritrema", "Comezón en orejas", "Serumen", "Cabeceo", "Dolor en las orejas"}, false);
         Diagnostico d83 = new Diagnostico(83, "Otitis", new String[]{"Comezón en orejas", "Irritación en las orejas", "Dolor en las orejas", "Piel enrojecida"}, false);
-        Diagnostico d84 = new Diagnostico(84, "Dermatitis", new String[]{"Caída de pelo", "Alopecia", "Prurito", "Eritrema", ""}, false);
+        Diagnostico d84 = new Diagnostico(84, "Dermatitis", new String[]{"Caída de pelo", "Alopecia", "Prurito", "Eritrema"}, false);
         Diagnostico d85 = new Diagnostico(85, "Dermatitis", new String[]{"Alopecia", "Prurito"}, false);
         Diagnostico d86 = new Diagnostico(86, "Dermatitis", new String[]{"Alopecia", "Prurito", "Piel enrojecida", "Mal olor"}, false);
         Diagnostico d87 = new Diagnostico(87, "Dermatitis", new String[]{"Lesiones por contacto al pasto", "Piel seca"}, false);
@@ -250,7 +253,7 @@ public class Dataset {
         historiasClinicas.put(d99.getReferencia(), d99);
         historiasClinicas.put(d100.getReferencia(), d100);
         historiasClinicas.put(d101.getReferencia(), d101);
-                               
+        
     }
     
     // Impresión de datos de cada Diagnóstico    
@@ -311,21 +314,27 @@ public class Dataset {
         matrizTF = new int [conjEnfermedades.size()][conjSintomas.size()];
         matrizIDF = new double [conjEnfermedades.size()][conjSintomas.size()];
         matrizTFIDF = new double [conjEnfermedades.size()][conjSintomas.size()];
-        cantidadHCEnfermedad = new int [conjEnfermedades.size()];
+        cantidadHCSintoma = new int [conjSintomas.size()];
 
-        // Genera el arreglo de la cantidad de HC's de una enfermedad
-        for(int i = 0; i < conjEnfermedades.size(); i++){
-            String enfermedad = conjEnfermedades.get(i);                
+        // Genera el arreglo de la cantidad de HC's que contiene el síntoma
+        for(int i = 0; i < conjSintomas.size(); i++){
+            String sintoma = conjSintomas.get(i);                
             for(long key: trainingHC.keySet()){
-                if(enfermedad.equals(trainingHC.get(key).getEnfermedad())){
+                String [] symptomSet = trainingHC.get(key).getSintomas();
+                for(String symptom : symptomSet){
+                    if(sintoma.equals(symptom)){
+                        cantidadHCSintoma[i]++;
+                    }
+                }                
+                /*if(enfermedad.equals(trainingHC.get(key).getEnfermedad())){
                     cantidadHCEnfermedad[i]++;
-                }
+                }*/
             }                            
         }
 
-        // Imprime el arreglo de la cantidad de HC's por enfermedad
-        for(int i = 0; i < cantidadHCEnfermedad.length; i++){
-            System.out.print(cantidadHCEnfermedad[i] + " ");
+        // Imprime el arreglo de la cantidad de HC's por síntoma
+        for(int i = 0; i < cantidadHCSintoma.length; i++){
+            System.out.println(conjSintomas.get(i) + ": " + cantidadHCSintoma[i] + " ");
         }
         System.out.println();
         System.out.println();
@@ -403,9 +412,26 @@ public class Dataset {
             }
             
             // Mayor similaridad determina el diagnóstico que arroje el sistema
-            System.out.println();
-            System.out.println("Mayor similaridad: " + this.mayorSimilaridad(cadenaSimilaridad));
-            System.out.println();           
+            int indice = 0;
+            double mayor = cadenaSimilaridad[indice];
+            for(int i = 0; i < cadenaSimilaridad.length; i++){
+                if(cadenaSimilaridad[i] > mayor){
+                    mayor = cadenaSimilaridad[i];
+                    indice = i;
+                }          
+            }
+            
+            System.out.println();            
+            System.out.println("Diagnóstico: " + conjEnfermedades.get(indice));            
+            System.out.println("Mayor similaridad: " + mayor);
+            System.out.println(testingHC.get(key).getEnfermedad() + " -> " + conjEnfermedades.get(indice));            
+            
+            if(testingHC.get(key).getEnfermedad().equals(conjEnfermedades.get(indice))){
+                cantidadAciertos++;
+            }
+            else{
+                cantidadDesaciertos++;
+            }
         }
     }
     
@@ -417,6 +443,8 @@ public class Dataset {
         System.out.println("");
         System.out.println("Cantidad de Historias clínicas seleccionadas para entrenar: " + trainingHC.size());
         System.out.println("Cantidad de Historias clínicas seleccionadas para probar: " + testingHC.size());
+        System.out.println("Cantidad de aciertos: " + cantidadAciertos);
+        System.out.println("Cantidad de desaciertos: " + cantidadDesaciertos);         
     }    
     
 //----------------------- Funciones auxiliares para las operaciones del Dataset --------------------------------
@@ -469,7 +497,7 @@ public class Dataset {
         }        
     }
     
-    // Genera la matriz IDF
+    // Genera la matriz IDF -> IDF = log((cantidadHC)/(1 + cantidadHCsintoma))
     public void generarMatrizIDF(double [][] IDFMatrix){
         for(int i = 0; i < conjEnfermedades.size(); i++){
             String enfermedad = conjEnfermedades.get(i);
@@ -482,7 +510,7 @@ public class Dataset {
                         String [] symptomSet = trainingHC.get(key).getSintomas();
                         for(String symptom : symptomSet){
                             if(sintoma.equals(symptom)){
-                                IDFMatrix[i][j] = Math.log10(cantidadHCEnfermedad[i] / (double)(1 + matrizTF[i][j]));
+                                IDFMatrix[i][j] = Math.log10(trainingHC.size() / (double)(1 + cantidadHCSintoma[j]));
                             }
                         }
                     }
@@ -573,7 +601,7 @@ public class Dataset {
     }
     
     // Función auxiliar para retornar el mayor valor de similaridad
-    public double mayorSimilaridad(double [] similarCadena){
+    /* public double mayorSimilaridad(double [] similarCadena){
         int indice = 0;
         double mayor = cadenaSimilaridad[indice];
         for(int i = 0; i < cadenaSimilaridad.length; i++){
@@ -584,6 +612,6 @@ public class Dataset {
         }
         System.out.println("Diagnóstico: " + conjEnfermedades.get(indice));        
         return mayor;
-    }
+    }*/
     
 }
