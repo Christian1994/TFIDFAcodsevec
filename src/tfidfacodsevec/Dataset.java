@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import mersennetwister.MersenneTwisterFast;
 
 /**
  *
@@ -425,6 +426,7 @@ public class Dataset {
             System.out.println("Diagnóstico: " + conjEnfermedades.get(indice));            
             System.out.println("Mayor similaridad: " + mayor);
             System.out.println(testingHC.get(key).getEnfermedad() + " -> " + conjEnfermedades.get(indice));            
+            System.out.println();
             
             if(testingHC.get(key).getEnfermedad().equals(conjEnfermedades.get(indice))){
                 cantidadAciertos++;
@@ -452,8 +454,12 @@ public class Dataset {
     // Selecciona aleatoriamente las historias clínicas para entrenamiento
     public void seleccionAleatoria(){
         int i = 0;
-        do{
-            long claveAux = (long)(historiasClinicas.size() * Math.random() + 1);
+        MersenneTwisterFast mt = new MersenneTwisterFast();                 // Generador de números pseudoaleatorios MersenneTwister
+        mt.setSeed((long)(historiasClinicas.size() * Math.random() + 1));   // Semilla     
+        do{           
+            long claveAux = (long)(mt.nextDouble() * historiasClinicas.size() + 1); 
+            System.out.println(claveAux);            
+            // long claveAux = (long)(historiasClinicas.size() * Math.random() + 1);
             if(!historiasClinicas.get(claveAux).isSeleccionado()){
                 trainingHC.put(claveAux, historiasClinicas.get(claveAux));
                 trainingHC.get(claveAux).setSeleccionado(true);
@@ -510,7 +516,7 @@ public class Dataset {
                         String [] symptomSet = trainingHC.get(key).getSintomas();
                         for(String symptom : symptomSet){
                             if(sintoma.equals(symptom)){
-                                IDFMatrix[i][j] = Math.log10(trainingHC.size() / (double)(1 + cantidadHCSintoma[j]));
+                                IDFMatrix[i][j] = Math.log(trainingHC.size() / (double)(1 + cantidadHCSintoma[j]));
                             }
                         }
                     }
