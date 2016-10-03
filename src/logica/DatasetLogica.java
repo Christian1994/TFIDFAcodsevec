@@ -250,12 +250,13 @@ public class DatasetLogica {
         mt.setSeed((long)(hcs.size() * Math.random() + 1));   // Semilla     
         do{           
             long claveAux = (long)(mt.nextDouble() * hcs.size() + 1); 
-            System.out.println(claveAux);            
+            // System.out.println(claveAux);            
             // long claveAux = (long)(hcs.size() * Math.random() + 1);
             if(!hcs.get(claveAux).isSeleccionado()){
                 trainingHC.put(claveAux, hcs.get(claveAux));
                 trainingHC.get(claveAux).setSeleccionado(true);
                 i++;
+                mt.setSeed((long)(hcs.size() * Math.random() + 1));   // Semilla 
             }
         }
         while(i < hcs.size() * 0.8);
