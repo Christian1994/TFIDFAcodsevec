@@ -5,6 +5,11 @@
  */
 package vista;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import logica.DatasetLogica;
 
 /**
@@ -13,6 +18,9 @@ import logica.DatasetLogica;
  */
 public class DatasetVista extends javax.swing.JFrame {
 
+    FileWriter archivoCrear = null;
+    File directorio = null;
+    File archivo = null;
     DatasetLogica dslogic = new DatasetLogica();
     
     /**
@@ -52,6 +60,7 @@ public class DatasetVista extends javax.swing.JFrame {
         btnProbar.setFont(new java.awt.Font("Comic Sans MS", 0, 18)); // NOI18N
         btnProbar.setText("Probar");
         btnProbar.setEnabled(false);
+        btnProbar.setEnabled(false);
         btnProbar.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnProbarActionPerformed(evt);
@@ -60,6 +69,7 @@ public class DatasetVista extends javax.swing.JFrame {
 
         btnEstadisticas.setFont(new java.awt.Font("Comic Sans MS", 0, 18)); // NOI18N
         btnEstadisticas.setText("Estadísticas");
+        btnEstadisticas.setEnabled(false);
         btnEstadisticas.setEnabled(false);
         btnEstadisticas.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -77,6 +87,7 @@ public class DatasetVista extends javax.swing.JFrame {
 
         jScrollPane1.setEnabled(false);
 
+        txtMensajes.setEditable(false);
         txtMensajes.setColumns(20);
         txtMensajes.setFont(new java.awt.Font("Comic Sans MS", 0, 18)); // NOI18N
         txtMensajes.setRows(5);
@@ -126,20 +137,35 @@ public class DatasetVista extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnEntrenarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEntrenarActionPerformed
-        dslogic.imprimirDiagnosticos();
-        dslogic.imprimirEnfermedades();
-        dslogic.imprimirSintomas();
-        dslogic.entrenamiento();
-        
-        btnEntrenar.setEnabled(false);
-        btnProbar.setEnabled(true);
-        
-        txtMensajes.setText(null);
-        txtMensajes.setText("Entrenamiento realizado con éxito.");
+        try {       
+            //this.directorio = new File("C:\\Users\\crisd\\Desktop\\pruebas");            
+            //this.directorio.mkdir();
+
+            directorio = new File("C:\\Users\\crisd\\Desktop");
+            
+            String fichero = "Prueba.txt";            
+            this.archivo = new File(directorio, fichero);
+            archivo.createNewFile();
+            this.archivoCrear = new FileWriter(archivo);
+            
+            dslogic.imprimirDiagnosticos(archivoCrear);
+            dslogic.imprimirEnfermedades(archivoCrear);
+            dslogic.imprimirSintomas(archivoCrear);
+            dslogic.entrenamiento(archivoCrear);
+            
+            btnEntrenar.setEnabled(false);
+            btnProbar.setEnabled(true);
+            btnPruebasCiclicas.setEnabled(false);
+            
+            txtMensajes.setText(null);
+            txtMensajes.setText("Entrenamiento realizado con éxito.");
+        } catch (IOException ex) {
+            Logger.getLogger(DatasetVista.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_btnEntrenarActionPerformed
 
     private void btnProbarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnProbarActionPerformed
-        dslogic.pruebas();
+        dslogic.pruebas(archivoCrear);
         
         btnProbar.setEnabled(false);        
         btnEstadisticas.setEnabled(true);
@@ -149,17 +175,31 @@ public class DatasetVista extends javax.swing.JFrame {
     }//GEN-LAST:event_btnProbarActionPerformed
 
     private void btnPruebasCiclicasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPruebasCiclicasActionPerformed
-        dslogic.pruebasCiclicas();
+        File directorioPruebas = new File("C:\\Users\\crisd\\Desktop\\pruebas");        
+        
+        dslogic.pruebasCiclicas(directorioPruebas);
+        
+        txtMensajes.setText(null);
+        txtMensajes.setText("Resultados de Pruebas de precisión unitarias y precisión promedio listos. Ver resultados en " + directorioPruebas);        
     }//GEN-LAST:event_btnPruebasCiclicasActionPerformed
 
     private void btnEstadisticasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEstadisticasActionPerformed
-        dslogic.estadisticas();
+        try {
+            dslogic.estadisticas(archivoCrear);
+            
+            btnEntrenar.setEnabled(true);
+            btnProbar.setEnabled(false);
+            btnEstadisticas.setEnabled(false);
+            btnPruebasCiclicas.setEnabled(true);
 
-        btnEntrenar.setEnabled(true);
-        btnProbar.setEnabled(false);
-        btnEstadisticas.setEnabled(false);
-        
-        dslogic = new DatasetLogica();
+            txtMensajes.setText(null);
+            txtMensajes.setText("Resultados de Prueba listos. Ver fichero .txt en " + directorio);            
+            
+            archivoCrear.close();
+            dslogic = new DatasetLogica();
+        } catch (IOException ex) {
+            Logger.getLogger(DatasetVista.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_btnEstadisticasActionPerformed
 
     /**
@@ -197,7 +237,7 @@ public class DatasetVista extends javax.swing.JFrame {
             }
         });
     }
-
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnEntrenar;
     private javax.swing.JButton btnEstadisticas;
