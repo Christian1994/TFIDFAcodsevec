@@ -143,7 +143,7 @@ public class DatasetVista extends javax.swing.JFrame {
 
             directorio = new File("C:\\Users\\crisd\\Desktop");
             
-            String fichero = "Prueba.txt";            
+            String fichero = "PruebaTFIDF.txt";            
             this.archivo = new File(directorio, fichero);
             archivo.createNewFile();
             this.archivoCrear = new FileWriter(archivo);
@@ -175,7 +175,7 @@ public class DatasetVista extends javax.swing.JFrame {
     }//GEN-LAST:event_btnProbarActionPerformed
 
     private void btnPruebasCiclicasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPruebasCiclicasActionPerformed
-        File directorioPruebas = new File("C:\\Users\\crisd\\Desktop\\pruebas");        
+        File directorioPruebas = new File("C:\\Users\\crisd\\Desktop\\pruebasTFIDF");        
         
         dslogic.pruebasCiclicas(directorioPruebas);
         
