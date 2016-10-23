@@ -268,6 +268,8 @@ public class DatasetLogica {
     // Realiza las pruebas automatizadas de precisión realizando las fases de entrenamiento, pruebas y recolección de resultados en forma cíclica
     public void pruebasCiclicas(File directorio) {
         FileWriter archivoReporte = null;
+        ArrayList<Long> listaTiempos = new ArrayList<>();
+        ArrayList<Double> listaPrecisiones = new ArrayList<>();
         try {
             directorio.mkdir();
             File reporte = new File(directorio, "Reporte.txt");
@@ -276,8 +278,11 @@ public class DatasetLogica {
             DecimalFormat formateador = new DecimalFormat("0.00");
             int cantidadPruebas = 100;
             double sumatoria = 0.0;
+            long totales = 0;
             for(int i = 0; i < cantidadPruebas; i++){
                 try {
+                    long tInicio, tFin, tTotal;
+                    tInicio = System.currentTimeMillis();
                     File prueba = new File(directorio, "Prueba " + (i + 1) + ".txt");
                     try (FileWriter archivoPruebaCrear = new FileWriter(prueba)) {
                         DatasetLogica dslogic = new DatasetLogica();
@@ -292,13 +297,44 @@ public class DatasetLogica {
                         // ds.imprimirDiagnosticosPrueba();
                         dslogic.pruebas(archivoPruebaCrear);
                         dslogic.estadisticas(archivoPruebaCrear);
+                        listaPrecisiones.add(dslogic.getPorcentajePrecision());
                         sumatoria += dslogic.getPorcentajePrecision();
                     }
+                    tFin = System.currentTimeMillis();
+                    tTotal = tFin - tInicio;
+                    totales += tTotal;
+                    listaTiempos.add(tTotal);
                 } catch (IOException ex) {
                     Logger.getLogger(DatasetLogica.class.getName()).log(Level.SEVERE, null, ex);
                 }
-            }   double promedioPrecision = (sumatoria / cantidadPruebas);
+            }            
+            double promedioPrecision = (sumatoria / cantidadPruebas);
+            double promedioTiempos = totales / listaTiempos.size();
+            double mayor = listaPrecisiones.get(0);
+            double menor = listaPrecisiones.get(0);
+            
+            // Mayor precisión
+            for(int i = 1; i < listaPrecisiones.size(); i++){
+                if(listaPrecisiones.get(i) >= mayor){
+                    mayor = listaPrecisiones.get(i);
+                }
+            }
+            
+            // Menor precisión
+            for(int i = 1; i < listaPrecisiones.size(); i++){
+                if(listaPrecisiones.get(i) <= menor){
+                    menor = listaPrecisiones.get(i);
+                }
+            }            
+            
+            archivoReporte.write("Reporte Pruebas Cíclicas: ");
             archivoReporte.write("\r\n");
+            archivoReporte.write("Tiempo de Ejecución Promedio: " + promedioTiempos / 1000 + " seg.");
+            archivoReporte.write("\r\n");
+            archivoReporte.write("Mejor porcentaje de Precisión: " + formateador.format(mayor) + "%");
+            archivoReporte.write("\r\n");
+            archivoReporte.write("Peor porcentaje de Precisión: " + formateador.format(menor) + "%");
+            archivoReporte.write("\r\n");              
             archivoReporte.write("Porcentaje Promedio Precisión: " + formateador.format(promedioPrecision) + "%");
         } catch (IOException ex) {
             Logger.getLogger(DatasetLogica.class.getName()).log(Level.SEVERE, null, ex);
